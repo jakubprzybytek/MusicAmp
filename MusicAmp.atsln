@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "MusicAmp", "MusicAmp.cppproj", "{FA2B1960-2038-4BC3-A23D-64930AA536E4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA2B1960-2038-4BC3-A23D-64930AA536E4}.Debug|AVR.ActiveCfg = Debug|AVR
+		{FA2B1960-2038-4BC3-A23D-64930AA536E4}.Debug|AVR.Build.0 = Debug|AVR
+		{FA2B1960-2038-4BC3-A23D-64930AA536E4}.Release|AVR.ActiveCfg = Release|AVR
+		{FA2B1960-2038-4BC3-A23D-64930AA536E4}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
