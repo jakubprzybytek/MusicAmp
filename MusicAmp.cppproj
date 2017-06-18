@@ -141,16 +141,16 @@
     <Compile Include="Audio\PGA4311.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Inputs\Encoder.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Inputs\Encoder.hpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="IO\AnalogIndicator.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="IO\AnalogIndicator.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="IO\Encoder.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="IO\Encoder.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MusicAmp.cpp">
@@ -158,7 +158,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Inputs" />
     <Folder Include="Audio" />
     <Folder Include="IO" />
   </ItemGroup>
