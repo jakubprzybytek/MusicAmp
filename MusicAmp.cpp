@@ -8,12 +8,19 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-//#include "Inputs/Encoder.hpp"
+#include "IO/Switch.hpp"
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
 #include "Audio/PGA4311.hpp"
 
+#define LED_INIT PORTA.DIRSET = PIN2_bm;
+#define LED_ON   PORTA.OUTSET = PIN2_bm;
+#define LED_OFF  PORTA.OUTCLR = PIN2_bm;
+#define LED_TGL  PORTA.OUTTGL = PIN2_bm;
+
 #define VOL_STEEP 5
+
+PowerSwitch powerSwitch;
 
 uint8_t sleepTime = 1;
 uint8_t vol = 50;
@@ -42,6 +49,24 @@ ISR (TCD1_OVF_vect) {
 	vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
 }
 
+// timer interrupt
+ISR (TCE1_OVF_vect) {
+	if (powerSwitch.IsUp()) {
+		TCE1.CTRLA = TC_CLKSEL_OFF_gc;
+		powerSwitch.EnableInterrupt();
+		powerSwitch.DisableLight();
+	}
+}
+
+// power switch 0 int
+ISR (PORTC_INT0_vect) {
+	powerSwitch.DisableInterrupt();
+	powerSwitch.EnableLight();
+	LED_TGL
+	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 0;
+	TCE1.CTRLA = TC_CLKSEL_DIV1024_gc;
+}
+
 int main(void)
 {
 	Encoder mainEncoder(&TCC1);
@@ -49,10 +74,18 @@ int main(void)
 	AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 	PGA4311 volumeControl(&SPIE, &PORTE, &PORTE, PIN3_bm);
 
-	PORTA.DIRSET = PIN2_bm | PIN5_bm;
-	PORTC.DIRSET = PIN3_bm;
+	LED_INIT
+
+	PORTA.DIRSET = PIN5_bm;
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
+
+	TCE1.PER = 2000;
+	TCE1.INTCTRLA = TC_OVFINTLVL_MED_gc;
+	//TCE1.CTRLA = TC_CLKSEL_DIV1024_gc;
+
+	powerSwitch.Init();
+	powerSwitch.EnableInterrupt();
 
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
@@ -62,13 +95,12 @@ int main(void)
 	//Encoder_Init(&TCC1);
 	
 	// enable interrupts
-	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_LOLVLEN_bm;
+	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	sei();
 
 	while(1)
 	{
-		PORTA.OUTSET = PIN2_bm | PIN5_bm;
-		PORTC.OUTCLR = PIN3_bm;
+		PORTA.OUTSET = PIN5_bm;
 		PORTE.OUTSET = PIN0_bm | PIN1_bm;
 		PORTF.OUTSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
@@ -76,8 +108,7 @@ int main(void)
 			_delay_ms(100);
 		}
 
-		PORTA.OUTCLR = PIN2_bm | PIN5_bm;
-		PORTC.OUTSET = PIN3_bm;
+		PORTA.OUTCLR = PIN5_bm;
 		PORTE.OUTCLR = PIN0_bm | PIN1_bm;
 		PORTF.OUTCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
