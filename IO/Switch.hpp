@@ -11,16 +11,21 @@
 
 class PowerSwitch {
 
+
 public:
+	void init();
 
-	void Init();
+	void processSwitchInterrupt();
+	void processTimerInterrupt();
 
-	void EnableInterrupt();
-	void DisableInterrupt();
-	bool IsUp();
+	void enableLight();
+	void disableLight();
 
-	void EnableLight();
-	void DisableLight();
+private:
+	void enableInterrupt();
+	void disableInterrupt();
+
+	bool isSwitchUp();
 
 };
 

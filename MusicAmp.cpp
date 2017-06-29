@@ -8,6 +8,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include "MusicAmp.h"
+
 #include "IO/Switch.hpp"
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
@@ -21,6 +23,8 @@
 #define VOL_STEEP 5
 
 PowerSwitch powerSwitch;
+
+bool turnedOn = false;
 
 uint8_t sleepTime = 1;
 uint8_t vol = 50;
@@ -49,22 +53,25 @@ ISR (TCD1_OVF_vect) {
 	vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
 }
 
-// timer interrupt
+// Power Switch timer interrupt
 ISR (TCE1_OVF_vect) {
-	if (powerSwitch.IsUp()) {
-		TCE1.CTRLA = TC_CLKSEL_OFF_gc;
-		powerSwitch.EnableInterrupt();
-		powerSwitch.DisableLight();
-	}
+	powerSwitch.processTimerInterrupt();
 }
 
-// power switch 0 int
+// Power Switch 0 int
 ISR (PORTC_INT0_vect) {
-	powerSwitch.DisableInterrupt();
-	powerSwitch.EnableLight();
+	powerSwitch.processSwitchInterrupt();
+
+	if (turnedOn) {
+		turnOff();
+	} else {
+		turnOn();
+	}
+
+	turnedOn = !turnedOn;
+
 	LED_TGL
 	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 0;
-	TCE1.CTRLA = TC_CLKSEL_DIV1024_gc;
 }
 
 int main(void)
@@ -80,20 +87,13 @@ int main(void)
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
-	TCE1.PER = 2000;
-	TCE1.INTCTRLA = TC_OVFINTLVL_MED_gc;
-	//TCE1.CTRLA = TC_CLKSEL_DIV1024_gc;
-
-	powerSwitch.Init();
-	powerSwitch.EnableInterrupt();
+	powerSwitch.init();
 
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
 	analogIndicator.Init();
 	volumeControl.Init();
 
-	//Encoder_Init(&TCC1);
-	
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	sei();
@@ -120,4 +120,12 @@ int main(void)
 
 		volumeControl.SetVolume(vol * 2.5, vol * 2.5, vol * 2.5, vol * 2.5);
 	}
+}
+
+void turnOn() {
+	powerSwitch.enableLight();
+}
+
+void turnOff() {
+	powerSwitch.disableLight();
 }
