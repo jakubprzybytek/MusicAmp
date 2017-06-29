@@ -6,11 +6,10 @@
  */ 
 
 
-#ifndef SWITCH_H_
-#define SWITCH_H_
+#ifndef POWER_CONTROL_H_
+#define POWER_CONTROL_H_
 
-class PowerSwitch {
-
+class PowerControl {
 
 public:
 	void init();
@@ -29,4 +28,4 @@ private:
 
 };
 
-#endif /* SWITCH_H_ */
+#endif /* POWER_CONTROL_H_ */

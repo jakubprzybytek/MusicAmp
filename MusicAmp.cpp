@@ -10,7 +10,7 @@
 
 #include "MusicAmp.h"
 
-#include "IO/Switch.hpp"
+#include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
 #include "Audio/PGA4311.hpp"
@@ -22,7 +22,7 @@
 
 #define VOL_STEEP 5
 
-PowerSwitch powerSwitch;
+PowerControl powerControl;
 
 bool turnedOn = false;
 
@@ -55,12 +55,12 @@ ISR (TCD1_OVF_vect) {
 
 // Power Switch timer interrupt
 ISR (TCE1_OVF_vect) {
-	powerSwitch.processTimerInterrupt();
+	powerControl.processTimerInterrupt();
 }
 
 // Power Switch 0 int
 ISR (PORTC_INT0_vect) {
-	powerSwitch.processSwitchInterrupt();
+	powerControl.processSwitchInterrupt();
 
 	if (turnedOn) {
 		turnOff();
@@ -69,9 +69,6 @@ ISR (PORTC_INT0_vect) {
 	}
 
 	turnedOn = !turnedOn;
-
-	LED_TGL
-	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 0;
 }
 
 int main(void)
@@ -87,7 +84,7 @@ int main(void)
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
-	powerSwitch.init();
+	powerControl.init();
 
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
@@ -123,9 +120,12 @@ int main(void)
 }
 
 void turnOn() {
-	powerSwitch.enableLight();
+	powerControl.enableLight();
+
+	LED_TGL
+	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 0;
 }
 
 void turnOff() {
-	powerSwitch.disableLight();
+	powerControl.disableLight();
 }

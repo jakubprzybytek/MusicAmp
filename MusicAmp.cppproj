@@ -153,10 +153,10 @@
     <Compile Include="IO\Encoder.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="IO\Switch.cpp">
+    <Compile Include="IO\PowerControl.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="IO\Switch.hpp">
+    <Compile Include="IO\PowerControl.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MusicAmp.cpp">
