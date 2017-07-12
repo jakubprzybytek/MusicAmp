@@ -10,8 +10,10 @@
 
 #define SWITCH_PIN PIN2_bm
 #define LED_PIN PIN3_bm
+#define TRIGGER_PIN PIN5_bm
 
 void PowerControl::init() {
+	PORTA.DIRSET = TRIGGER_PIN;
 	PORTC.DIRCLR = SWITCH_PIN;
 	PORTC.DIRSET = LED_PIN;
 	PORTC.PIN2CTRL = PORT_OPC_PULLUP_gc | PORT_ISC_FALLING_gc;
@@ -46,6 +48,14 @@ void PowerControl::processTimerInterrupt() {
 
 bool PowerControl::isSwitchUp() {
 	return PORTC.IN & SWITCH_PIN;
+}
+
+void PowerControl::enablePower() {
+	PORTA.OUTSET = TRIGGER_PIN;
+}
+
+void PowerControl::disablePower() {
+	PORTA.OUTCLR = TRIGGER_PIN;
 }
 
 void PowerControl::enableLight() {

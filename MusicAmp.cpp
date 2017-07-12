@@ -27,7 +27,7 @@ PowerControl powerControl;
 bool turnedOn = false;
 
 uint8_t sleepTime = 1;
-uint8_t vol = 50;
+uint8_t vol = 10;
 
 // encoder interrupt
 ISR (TCC1_CCA_vect) {
@@ -80,7 +80,6 @@ int main(void)
 
 	LED_INIT
 
-	PORTA.DIRSET = PIN5_bm;
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
@@ -97,7 +96,6 @@ int main(void)
 
 	while(1)
 	{
-		PORTA.OUTSET = PIN5_bm;
 		PORTE.OUTSET = PIN0_bm | PIN1_bm;
 		PORTF.OUTSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
@@ -105,7 +103,6 @@ int main(void)
 			_delay_ms(100);
 		}
 
-		PORTA.OUTCLR = PIN5_bm;
 		PORTE.OUTCLR = PIN0_bm | PIN1_bm;
 		PORTF.OUTCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
@@ -121,11 +118,12 @@ int main(void)
 
 void turnOn() {
 	powerControl.enableLight();
+	powerControl.enablePower();
 
 	LED_TGL
-	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 0;
 }
 
 void turnOff() {
 	powerControl.disableLight();
+	powerControl.disablePower();
 }

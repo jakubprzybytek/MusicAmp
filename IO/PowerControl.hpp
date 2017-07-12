@@ -17,6 +17,9 @@ public:
 	void processSwitchInterrupt();
 	void processTimerInterrupt();
 
+	void enablePower();
+	void disablePower();
+
 	void enableLight();
 	void disableLight();
 
