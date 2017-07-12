@@ -9,48 +9,49 @@
 #include <util/delay.h>
 
 #include "MusicAmp.h"
+#include "Events.hpp"
 
+#include "IO/Debug.hpp"
 #include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
-#include "Audio/PGA4311.hpp"
 
-#define LED_INIT PORTA.DIRSET = PIN2_bm;
-#define LED_ON   PORTA.OUTSET = PIN2_bm;
-#define LED_OFF  PORTA.OUTCLR = PIN2_bm;
-#define LED_TGL  PORTA.OUTTGL = PIN2_bm;
+#include "Audio/PGA4311.hpp"
 
 #define VOL_STEEP 5
 
+Debug debug;
 PowerControl powerControl;
+
+Events events;
 
 bool turnedOn = false;
 
 uint8_t sleepTime = 1;
 uint8_t vol = 10;
 
-// encoder interrupt
+// Secondary encoder interrupt: right
 ISR (TCC1_CCA_vect) {
 	TCC1.CNT = 8;
-	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 100;
+	events.setStatus(Events::ENCODER_RIGHT);
 }
 
-// encoder interrupt
+// Secondary encoder interrupt: left
 ISR (TCC1_OVF_vect) {
 	TCC1.CNT = 8;
-	vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
+	events.setStatus(Events::ENCODER_LEFT);
 }
 
-// encoder interrupt
+// Main encoder interrupt: right
 ISR (TCD1_CCA_vect) {
 	TCD1.CNT = 8;
-	vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 100;
+	events.setStatus(Events::ENCODER_RIGHT);
 }
 
-// encoder interrupt
+// Main encoder interrupt: left
 ISR (TCD1_OVF_vect) {
 	TCD1.CNT = 8;
-	vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
+	events.setStatus(Events::ENCODER_LEFT);
 }
 
 // Power Switch timer interrupt
@@ -58,7 +59,12 @@ ISR (TCE1_OVF_vect) {
 	powerControl.processTimerInterrupt();
 }
 
-// Power Switch 0 int
+// Port A Debug Switch 0 int
+ISR (PORTA_INT0_vect) {
+	debug.toggleLed();
+}
+
+// Port C Power Switch 0 int
 ISR (PORTC_INT0_vect) {
 	powerControl.processSwitchInterrupt();
 
@@ -78,11 +84,10 @@ int main(void)
 	AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 	PGA4311 volumeControl(&SPIE, &PORTE, &PORTE, PIN3_bm);
 
-	LED_INIT
-
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
+	debug.init();
 	powerControl.init();
 
 	mainEncoder.InitMain();
@@ -94,8 +99,24 @@ int main(void)
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	sei();
 
+	uint8_t eventsStatus;
 	while(1)
 	{
+		eventsStatus = events.getStatus();
+
+		if (eventsStatus == Events::ENCODER_LEFT) {
+			vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
+		}
+
+		if (eventsStatus == Events::ENCODER_RIGHT) {
+			vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 100;
+		}
+
+		analogIndicator.SetPercentValue(vol);
+		volumeControl.SetVolume(vol * 2.5, vol * 2.5, vol * 2.5, vol * 2.5);
+
+/*		
+		
 		PORTE.OUTSET = PIN0_bm | PIN1_bm;
 		PORTF.OUTSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
@@ -109,10 +130,7 @@ int main(void)
 		for (uint8_t i = 0; i < sleepTime; i++) {
 			_delay_ms(100);
 		}
-
-		analogIndicator.SetPercentValue(vol);
-
-		volumeControl.SetVolume(vol * 2.5, vol * 2.5, vol * 2.5, vol * 2.5);
+*/
 	}
 }
 
@@ -120,7 +138,7 @@ void turnOn() {
 	powerControl.enableLight();
 	powerControl.enablePower();
 
-	LED_TGL
+	debug.toggleLed();
 }
 
 void turnOff() {
