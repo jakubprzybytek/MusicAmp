@@ -171,6 +171,12 @@
     <Compile Include="IO\PowerControl.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="IO\InputSelector.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="IO\InputSelector.hpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="MusicAmp.cpp">
       <SubType>compile</SubType>
     </Compile>

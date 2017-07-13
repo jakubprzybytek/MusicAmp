@@ -17,6 +17,7 @@
 #include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
+#include "IO/InputSelector.hpp"
 
 #include "Audio/PGA4311.hpp"
 
@@ -26,12 +27,12 @@ Timer oscillationCancellingTimer(&TCE1, 200);
 
 Debug debug;
 PowerControl powerControl;
+InputSelector inputSelector;
 
 Events events;
 
 bool turnedOn = false;
 
-uint8_t sleepTime = 1;
 uint8_t vol = 10;
 
 // Secondary encoder interrupt: right
@@ -63,6 +64,7 @@ ISR (PORTA_INT0_vect) {
 	processSwitchInterrupt();
 
 	debug.toggleLed();
+	inputSelector.nextInput();
 }
 
 // Port C: Power Switch 0 int
@@ -107,7 +109,6 @@ int main(void)
 	PGA4311 volumeControl(&SPIE, &PORTE, &PORTE, PIN3_bm);
 
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
-	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 
 	oscillationCancellingTimer.init();
 
@@ -118,6 +119,7 @@ int main(void)
 	secondaryEncoder.InitSecondary();
 	analogIndicator.Init();
 	volumeControl.Init();
+	inputSelector.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -142,18 +144,6 @@ int main(void)
 /*		
 		
 		PORTE.OUTSET = PIN0_bm | PIN1_bm;
-		PORTF.OUTSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
-
-		for (uint8_t i = 0; i < sleepTime; i++) {
-			_delay_ms(100);
-		}
-
-		PORTE.OUTCLR = PIN0_bm | PIN1_bm;
-		PORTF.OUTCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
-
-		for (uint8_t i = 0; i < sleepTime; i++) {
-			_delay_ms(100);
-		}
 */
 	}
 }
