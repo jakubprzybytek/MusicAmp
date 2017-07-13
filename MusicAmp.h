@@ -9,6 +9,9 @@
 #ifndef MUSICAMP_H_
 #define MUSICAMP_H_
 
+void processSwitchInterrupt();
+void processTimerInterrupt();
+
 void turnOn();
 void turnOff();
 

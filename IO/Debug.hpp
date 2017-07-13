@@ -5,6 +5,7 @@
  *  Author: Rodos
  */ 
 
+#include "../Tools/Switch.hpp"
 
 #ifndef DEBUG_H_
 #define DEBUG_H_
@@ -12,6 +13,10 @@
 class Debug {
 
 public:
+	InterruptSwitch switcher;
+
+	Debug() : switcher(&PORTA, PIN3_bm, &(PORTA.PIN3CTRL)) {}
+
 	void init();
 
 	void toggleLed();

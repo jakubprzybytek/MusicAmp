@@ -177,10 +177,23 @@
     <Compile Include="MusicAmp.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Tools\Timer.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Tools\Timer.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Tools\Switch.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Tools\Switch.hpp">
+      <SubType>compile</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Audio" />
     <Folder Include="IO" />
+    <Folder Include="Tools" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

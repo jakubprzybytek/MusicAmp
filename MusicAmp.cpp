@@ -11,6 +11,8 @@
 #include "MusicAmp.h"
 #include "Events.hpp"
 
+#include "Tools/Timer.hpp"
+
 #include "IO/Debug.hpp"
 #include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
@@ -19,6 +21,8 @@
 #include "Audio/PGA4311.hpp"
 
 #define VOL_STEEP 5
+
+Timer oscillationCancellingTimer(&TCE1, 200);
 
 Debug debug;
 PowerControl powerControl;
@@ -54,19 +58,16 @@ ISR (TCD1_OVF_vect) {
 	events.setStatus(Events::ENCODER_LEFT);
 }
 
-// Power Switch timer interrupt
-ISR (TCE1_OVF_vect) {
-	powerControl.processTimerInterrupt();
-}
-
-// Port A Debug Switch 0 int
+// Port A: Debug Switch 0 int
 ISR (PORTA_INT0_vect) {
+	processSwitchInterrupt();
+
 	debug.toggleLed();
 }
 
-// Port C Power Switch 0 int
+// Port C: Power Switch 0 int
 ISR (PORTC_INT0_vect) {
-	powerControl.processSwitchInterrupt();
+	processSwitchInterrupt();
 
 	if (turnedOn) {
 		turnOff();
@@ -75,6 +76,27 @@ ISR (PORTC_INT0_vect) {
 	}
 
 	turnedOn = !turnedOn;
+}
+
+// TCE1: All Switch timer interrupt
+ISR (TCE1_OVF_vect) {
+	processTimerInterrupt();
+}
+
+void processSwitchInterrupt() {
+	debug.switcher.disableInterrupt();
+	powerControl.switcher.disableInterrupt();
+
+	oscillationCancellingTimer.enable();
+}
+
+void processTimerInterrupt() {
+	if (debug.switcher.isUp() && powerControl.switcher.isUp()) {
+		oscillationCancellingTimer.disable();
+
+		debug.switcher.enableInterrupt();
+		powerControl.switcher.enableInterrupt();
+	}
 }
 
 int main(void)
@@ -86,6 +108,8 @@ int main(void)
 
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
+
+	oscillationCancellingTimer.init();
 
 	debug.init();
 	powerControl.init();

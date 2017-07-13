@@ -5,6 +5,7 @@
  *  Author: Rodos
  */ 
 
+#include "../Tools/Switch.hpp"
 
 #ifndef POWER_CONTROL_H_
 #define POWER_CONTROL_H_
@@ -12,22 +13,17 @@
 class PowerControl {
 
 public:
-	void init();
+	InterruptSwitch switcher;
 
-	void processSwitchInterrupt();
-	void processTimerInterrupt();
+	PowerControl() : switcher(&PORTC, PIN2_bm, &(PORTC.PIN2CTRL)) {}
+
+	void init();
 
 	void enablePower();
 	void disablePower();
 
 	void enableLight();
 	void disableLight();
-
-private:
-	void enableInterrupt();
-	void disableInterrupt();
-
-	bool isSwitchUp();
 
 };
 
