@@ -18,22 +18,19 @@
 #include "IO/Encoder.hpp"
 #include "IO/AnalogIndicator.hpp"
 #include "IO/InputSelector.hpp"
-
-#include "Audio/PGA4311.hpp"
-
-#define VOL_STEEP 5
-
-Timer oscillationCancellingTimer(&TCE1, 200);
+#include "IO/VolumeControl.hpp"
 
 Debug debug;
-PowerControl powerControl;
-InputSelector inputSelector;
+Timer oscillationCancellingTimer(&TCE1, 200);
 
 Events events;
 
-bool turnedOn = false;
+// controllers
+PowerControl powerControl;
+InputSelector inputSelector;
+VolumeControl volumeControl;
 
-uint8_t vol = 10;
+bool turnedOn = false;
 
 // Secondary encoder interrupt: right
 ISR (TCC1_CCA_vect) {
@@ -65,6 +62,7 @@ ISR (PORTA_INT0_vect) {
 
 	debug.toggleLed();
 	inputSelector.nextInput();
+	volumeControl.muteTgl();
 }
 
 // Port C: Power Switch 0 int
@@ -103,23 +101,24 @@ void processTimerInterrupt() {
 
 int main(void)
 {
+	// inputs
 	Encoder mainEncoder(&TCC1);
 	Encoder secondaryEncoder(&TCD1);
+
+	// outputs
 	AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
-	PGA4311 volumeControl(&SPIE, &PORTE, &PORTE, PIN3_bm);
-
-	PORTE.DIRSET = PIN0_bm | PIN1_bm;
-
-	oscillationCancellingTimer.init();
 
 	debug.init();
-	powerControl.init();
+	oscillationCancellingTimer.init();
 
+	powerControl.init();
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
+
 	analogIndicator.Init();
-	volumeControl.Init();
+
 	inputSelector.init();
+	volumeControl.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -131,31 +130,29 @@ int main(void)
 		eventsStatus = events.getStatus();
 
 		if (eventsStatus == Events::ENCODER_LEFT) {
-			vol = vol >= VOL_STEEP ? vol - VOL_STEEP : 0;
+			volumeControl.stepDown();
 		}
 
 		if (eventsStatus == Events::ENCODER_RIGHT) {
-			vol = vol <= (100 - VOL_STEEP) ? vol + VOL_STEEP : 100;
+			volumeControl.stepUp();
 		}
 
-		analogIndicator.SetPercentValue(vol);
-		volumeControl.SetVolume(vol * 2.5, vol * 2.5, vol * 2.5, vol * 2.5);
-
-/*		
-		
-		PORTE.OUTSET = PIN0_bm | PIN1_bm;
-*/
+		analogIndicator.SetPercentValue(volumeControl.getCurrentVolume());
 	}
 }
 
 void turnOn() {
 	powerControl.enableLight();
+	_delay_ms(100);
 	powerControl.enablePower();
+	_delay_ms(100);
+	volumeControl.unmute();
 
 	debug.toggleLed();
 }
 
 void turnOff() {
+	volumeControl.mute();
 	powerControl.disableLight();
 	powerControl.disablePower();
 }

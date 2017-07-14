@@ -20,9 +20,9 @@ public:
 	PGA4311(SPI_t* spi, PORT_t* spiPort, PORT_t* csPort, uint8_t csPin_bm)
 		: spi(spi), spiPort(spiPort), csPort(csPort), csPin_bm(csPin_bm) {};
 
-	void Init();
+	void init();
 
-	void SetVolume(uint8_t firstChanell, uint8_t secondChanell, uint8_t thirdChanell, uint8_t fourthChanell);
+	void setVolume(uint8_t firstChanell, uint8_t secondChanell, uint8_t thirdChanell, uint8_t fourthChanell);
 
 };
 
