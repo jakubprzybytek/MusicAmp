@@ -11,7 +11,7 @@
 
 #include <avr/io.h>
 
-#include "../Audio/PGA4311.hpp"
+#include "../Devices/PGA4311.hpp"
 
 #define VOL_STEEP 5
 

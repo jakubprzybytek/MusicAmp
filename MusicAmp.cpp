@@ -16,12 +16,11 @@
 #include "IO/Debug.hpp"
 #include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
-
-#include "IO/AnalogIndicator.hpp"
 #include "IO/InputSelector.hpp"
-#include "IO/VolumeControl.hpp"
+#include "IO/AnalogIndicator.hpp"
 
-#include "Monitor/MCP3426.hpp"
+#include "Audio/VolumeControl.hpp"
+#include "Monitor/PowerSupplyMonitor.hpp"
 
 Debug debug;
 Timer oscillationCancellingTimer(&TCC0, 400);
@@ -38,7 +37,7 @@ InputSelector inputSelector;
 VolumeControl volumeControl;
 
 // monitors
-MCP3426 mcp3426(&TWIC);
+PowerSupplyMonitor powerSupplyMonitor;
 
 bool turnedOn = false;
 
@@ -77,12 +76,13 @@ ISR (TCC0_OVF_vect) {
  * TCD0: Heartbeat timer interrupt
  ***************** */
 ISR (TCD0_OVF_vect) {
-	uint16_t voltage, current;
+	static uint16_t power;
 
-	uint8_t status = mcp3426.read(&current, &voltage);
-	if (status == MCP_OK) {
-		analogIndicator.setPercentValue(voltage / 21);
+	if (!powerSupplyMonitor.readPowerValue(&power)) {
+		return;
 	}
+
+	analogIndicator.setPercentValue(power / 21);
 }
 
 // Port A: Debug Switch 0 int
@@ -148,7 +148,7 @@ int main(void)
 	volumeControl.init();
 
 	// monitors
-	mcp3426.init();
+	powerSupplyMonitor.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -170,6 +170,7 @@ int main(void)
 		}
 
 		analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
+		//analogIndicator.setValue(val);
 	}
 }
 
