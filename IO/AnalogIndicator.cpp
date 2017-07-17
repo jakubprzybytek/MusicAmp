@@ -11,7 +11,7 @@
 
 #define SINGLE_STEEP 4095.0 / 100.0;
 
-void AnalogIndicator::Init() {
+void AnalogIndicator::init() {
 	dacPort->DIRSET = dacPin_bm;
 	dac->CTRLB = DAC_CHSEL_SINGLE_gc | !DAC_CH0TRIG_bm;
 	dac->CTRLC = DAC_REFSEL_INT1V_gc;
@@ -21,6 +21,6 @@ void AnalogIndicator::Init() {
 	dac->CH0DATA = 2000;
 }
 
-void AnalogIndicator::SetPercentValue(uint8_t value) {
+void AnalogIndicator::setPercentValue(uint8_t value) {
 	dac->CH0DATA = value * SINGLE_STEEP;
 }

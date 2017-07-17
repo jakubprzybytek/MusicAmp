@@ -16,19 +16,28 @@
 #include "IO/Debug.hpp"
 #include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
+
 #include "IO/AnalogIndicator.hpp"
 #include "IO/InputSelector.hpp"
 #include "IO/VolumeControl.hpp"
 
+#include "Monitor/MCP3426.hpp"
+
 Debug debug;
-Timer oscillationCancellingTimer(&TCE1, 200);
+Timer oscillationCancellingTimer(&TCE1, 400);
 
 Events events;
+
+// outputs
+AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
 VolumeControl volumeControl;
+
+// monitors
+MCP3426 mcp3426(&TWIC);
 
 bool turnedOn = false;
 
@@ -56,13 +65,25 @@ ISR (TCD1_OVF_vect) {
 	events.setStatus(Events::ENCODER_LEFT);
 }
 
+// TCE1: All Switch timer interrupt
+ISR (TCE1_OVF_vect) {
+	processTimerInterrupt();
+}
+
 // Port A: Debug Switch 0 int
 ISR (PORTA_INT0_vect) {
 	processSwitchInterrupt();
 
 	debug.toggleLed();
 	inputSelector.nextInput();
-	volumeControl.muteTgl();
+	//volumeControl.muteTgl();
+
+	uint16_t voltage, current;
+
+	uint8_t status = mcp3426.read(&current, &voltage);
+	if (status == MCP_OK) {
+		analogIndicator.setPercentValue(voltage / 5);
+	}
 }
 
 // Port C: Power Switch 0 int
@@ -76,11 +97,6 @@ ISR (PORTC_INT0_vect) {
 	}
 
 	turnedOn = !turnedOn;
-}
-
-// TCE1: All Switch timer interrupt
-ISR (TCE1_OVF_vect) {
-	processTimerInterrupt();
 }
 
 void processSwitchInterrupt() {
@@ -105,9 +121,6 @@ int main(void)
 	Encoder mainEncoder(&TCC1);
 	Encoder secondaryEncoder(&TCD1);
 
-	// outputs
-	AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
-
 	debug.init();
 	oscillationCancellingTimer.init();
 
@@ -115,10 +128,15 @@ int main(void)
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
 
-	analogIndicator.Init();
+	// outputs
+	analogIndicator.init();
 
+	// controllers
 	inputSelector.init();
 	volumeControl.init();
+
+	// monitors
+	mcp3426.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -137,7 +155,7 @@ int main(void)
 			volumeControl.stepUp();
 		}
 
-		analogIndicator.SetPercentValue(volumeControl.getCurrentVolume());
+		analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
 	}
 }
 
@@ -148,11 +166,13 @@ void turnOn() {
 	_delay_ms(100);
 	volumeControl.unmute();
 
-	debug.toggleLed();
+	debug.blink(1);
 }
 
 void turnOff() {
 	volumeControl.mute();
 	powerControl.disableLight();
 	powerControl.disablePower();
+
+	debug.blink(2);
 }

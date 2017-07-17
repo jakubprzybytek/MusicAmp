@@ -21,6 +21,8 @@ public:
 
 	void toggleLed();
 
+	void blink(uint8_t count);
+
 };
 
 #endif /* DEBUG_H_ */

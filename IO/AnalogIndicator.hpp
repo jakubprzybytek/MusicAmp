@@ -20,9 +20,9 @@ public:
 	AnalogIndicator(DAC_t* dac, PORT_t* dacPort, uint8_t dacPin_bm)
 		: dac(dac), dacPort(dacPort), dacPin_bm(dacPin_bm) {};
 
-	void Init();
+	void init();
 
-	void SetPercentValue(uint8_t value);
+	void setPercentValue(uint8_t value);
 
 };
 
