@@ -24,7 +24,8 @@
 #include "Monitor/MCP3426.hpp"
 
 Debug debug;
-Timer oscillationCancellingTimer(&TCE1, 400);
+Timer oscillationCancellingTimer(&TCC0, 400);
+Timer heartbeat(&TCD0, 500);
 
 Events events;
 
@@ -65,9 +66,23 @@ ISR (TCD1_OVF_vect) {
 	events.setStatus(Events::ENCODER_LEFT);
 }
 
-// TCE1: All Switch timer interrupt
-ISR (TCE1_OVF_vect) {
+/* *****************
+ * TCC0: All Switch timer interrupt
+ ***************** */
+ISR (TCC0_OVF_vect) {
 	processTimerInterrupt();
+}
+
+/* *****************
+ * TCD0: Heartbeat timer interrupt
+ ***************** */
+ISR (TCD0_OVF_vect) {
+	uint16_t voltage, current;
+
+	uint8_t status = mcp3426.read(&current, &voltage);
+	if (status == MCP_OK) {
+		analogIndicator.setPercentValue(voltage / 21);
+	}
 }
 
 // Port A: Debug Switch 0 int
@@ -77,13 +92,6 @@ ISR (PORTA_INT0_vect) {
 	debug.toggleLed();
 	inputSelector.nextInput();
 	//volumeControl.muteTgl();
-
-	uint16_t voltage, current;
-
-	uint8_t status = mcp3426.read(&current, &voltage);
-	if (status == MCP_OK) {
-		analogIndicator.setPercentValue(voltage / 5);
-	}
 }
 
 // Port C: Power Switch 0 int
@@ -122,8 +130,12 @@ int main(void)
 	Encoder secondaryEncoder(&TCD1);
 
 	debug.init();
-	oscillationCancellingTimer.init();
 
+	// core features
+	oscillationCancellingTimer.init();
+	heartbeat.init();
+
+	// IO
 	powerControl.init();
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
@@ -141,6 +153,8 @@ int main(void)
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	sei();
+
+	heartbeat.enable();
 
 	uint8_t eventsStatus;
 	while(1)
