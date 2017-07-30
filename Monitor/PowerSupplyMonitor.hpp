@@ -20,7 +20,7 @@ public:
 
 	void init();
 
-	bool readPowerValue(uint16_t* power);
+	bool readPowerValue(float* power);
 };
 
 #endif /* POWERSUPPLYMONITOR_H_ */

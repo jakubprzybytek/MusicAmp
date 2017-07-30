@@ -12,6 +12,8 @@
 void processSwitchInterrupt();
 void processTimerInterrupt();
 
+void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay = 0);
+
 void turnOn();
 void turnOff();
 

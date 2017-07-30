@@ -25,6 +25,7 @@
 Debug debug;
 Timer oscillationCancellingTimer(&TCC0, 400);
 Timer heartbeat(&TCD0, 500);
+uint16_t hearbeatCounter = 0;
 
 Events events;
 
@@ -38,6 +39,10 @@ VolumeControl volumeControl;
 
 // monitors
 PowerSupplyMonitor powerSupplyMonitor;
+
+#define ANALOG_INDICATOR_MODE_POWER 0x00
+#define ANALOG_INDICATOR_MODE_OFF 0x01
+uint8_t analogIndicatorMode = ANALOG_INDICATOR_MODE_POWER;
 
 bool turnedOn = false;
 
@@ -76,25 +81,45 @@ ISR (TCC0_OVF_vect) {
  * TCD0: Heartbeat timer interrupt
  ***************** */
 ISR (TCD0_OVF_vect) {
-	static uint16_t power;
-
-	if (!powerSupplyMonitor.readPowerValue(&power)) {
-		return;
+	if (hearbeatCounter > 0) {
+		hearbeatCounter--;
+		if (hearbeatCounter == 0) {
+			events.setStatus(Events::TIMER_DOWN);
+		}
 	}
 
-	analogIndicator.setPercentValue(power / 21);
+	switch (analogIndicatorMode) {
+		case ANALOG_INDICATOR_MODE_POWER:
+			static float power;
+			if (!powerSupplyMonitor.readPowerValue(&power)) {
+				return;
+			}
+			analogIndicator.setPercentValue(power);
+			break;
+	}
 }
 
-// Port A: Debug Switch 0 int
+/* *****************
+ * Port A: Debug Switch 0 int
+ ***************** */
 ISR (PORTA_INT0_vect) {
 	processSwitchInterrupt();
 
 	debug.toggleLed();
-	inputSelector.nextInput();
+	//inputSelector.nextInput();
 	//volumeControl.muteTgl();
+	
+	static float power;
+	if (!powerSupplyMonitor.readPowerValue(&power)) {
+		return;
+	}
+
+	analogIndicator.setPercentValue(power);
 }
 
-// Port C: Power Switch 0 int
+/* *****************
+ * Port C: Power Switch 0 int
+ ***************** */
 ISR (PORTC_INT0_vect) {
 	processSwitchInterrupt();
 
@@ -162,16 +187,28 @@ int main(void)
 		eventsStatus = events.getStatus();
 
 		if (eventsStatus == Events::ENCODER_LEFT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 2);
+
 			volumeControl.stepDown();
+			analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
 		}
 
 		if (eventsStatus == Events::ENCODER_RIGHT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 2);
+
 			volumeControl.stepUp();
+			analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
 		}
 
-		analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
-		//analogIndicator.setValue(val);
+		if (eventsStatus == Events::TIMER_DOWN) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_POWER);
+		}
 	}
+}
+
+void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay) {
+	hearbeatCounter = delay * 4; // heartbeat evert 1/4s
+	analogIndicatorMode = newMode;
 }
 
 void turnOn() {

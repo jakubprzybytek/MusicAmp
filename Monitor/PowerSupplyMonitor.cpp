@@ -7,11 +7,14 @@
 
 #include "PowerSupplyMonitor.hpp"
 
+#define VOLTAGE_FACTOR 32.0 / 2.0 / 1000.0 // 2k? || 30k?
+#define CURRENT_FACTOR 3.0 / 1000.0
+
 void PowerSupplyMonitor::init() {
 	mcp3426.init();
 }
 
-bool PowerSupplyMonitor::readPowerValue(uint16_t* power) {
+bool PowerSupplyMonitor::readPowerValue(float* power) {
 	static uint16_t voltage, current;
 	uint8_t status = mcp3426.read(&current, &voltage);
 	
@@ -19,7 +22,8 @@ bool PowerSupplyMonitor::readPowerValue(uint16_t* power) {
 		return false;
 	}
 
-	*power = voltage;
+	*power = (voltage * VOLTAGE_FACTOR) * (current * CURRENT_FACTOR);
+	//*power = voltage * VOLTAGE_FACTOR;
 
 	return true;
 }

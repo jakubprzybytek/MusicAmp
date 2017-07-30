@@ -9,7 +9,7 @@
 
 #include "AnalogIndicator.hpp"
 
-#define SINGLE_STEEP 3190.0 / 100.0;
+#define SINGLE_STEEP 3190.0 / 100.0 // 3190 gives 100% on the display
 
 void AnalogIndicator::init() {
 	dacPort->DIRSET = dacPin_bm;
@@ -23,6 +23,10 @@ void AnalogIndicator::init() {
 
 void AnalogIndicator::setPercentValue(uint8_t value) {
 	dac->CH0DATA = value * SINGLE_STEEP;
+}
+
+void AnalogIndicator::setPercentValue(float value) {
+	dac->CH0DATA = (uint16_t)(value * SINGLE_STEEP);
 }
 
 void AnalogIndicator::setValue(uint16_t value) {

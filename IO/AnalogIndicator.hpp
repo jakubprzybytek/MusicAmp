@@ -23,6 +23,7 @@ public:
 	void init();
 
 	void setPercentValue(uint8_t value);
+	void setPercentValue(float value);
 	void setValue(uint16_t value);
 
 };
