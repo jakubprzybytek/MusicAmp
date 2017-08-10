@@ -14,6 +14,7 @@
 #include "../Devices/PGA4311.hpp"
 
 #define VOL_STEEP 5
+#define VOL_MAX 100
 
 class VolumeControl {
 

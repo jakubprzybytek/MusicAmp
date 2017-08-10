@@ -12,7 +12,7 @@
 void PGA4311::init() {
 	csPort->DIRSET = csPin_bm;
 	spiPort->DIRSET = PIN4_bm | PIN5_bm | PIN7_bm;
-	spi->CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_MODE_0_gc | SPI_PRESCALER_DIV128_gc;
+	spi->CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_MODE_0_gc | SPI_PRESCALER_DIV16_gc;
 	spi->INTCTRL = SPI_INTLVL_OFF_gc;
 }
 

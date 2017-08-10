@@ -23,7 +23,7 @@ void VolumeControl::setVolume(uint8_t newAudioVolume, uint8_t newBassVolume) {
 }
 
 void VolumeControl::stepAudioUp() {
-	setVolume(audioVolume <= (100 - VOL_STEEP) ? audioVolume + VOL_STEEP : 100, bassVolume);
+	setVolume(audioVolume <= (VOL_MAX - VOL_STEEP) ? audioVolume + VOL_STEEP : VOL_MAX, bassVolume);
 }
 
 void VolumeControl::stepAudioDown() {
@@ -31,7 +31,7 @@ void VolumeControl::stepAudioDown() {
 }
 
 void VolumeControl::stepBassUp() {
-	setVolume(audioVolume, bassVolume <= (100 - VOL_STEEP) ? bassVolume + VOL_STEEP : 100);
+	setVolume(audioVolume, bassVolume <= (VOL_MAX - VOL_STEEP) ? bassVolume + VOL_STEEP : VOL_MAX);
 }
 
 void VolumeControl::stepBassDown() {

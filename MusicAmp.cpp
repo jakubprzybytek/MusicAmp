@@ -221,7 +221,7 @@ int main(void)
 }
 
 void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay) {
-	hearbeatCounter = delay * 4; // heartbeat evert 1/4s
+	hearbeatCounter = delay * 4; // heartbeat every 1/4s
 	analogIndicatorMode = newMode;
 }
 
