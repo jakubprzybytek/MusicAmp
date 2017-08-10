@@ -23,7 +23,7 @@
 #include "Monitor/PowerSupplyMonitor.hpp"
 
 Debug debug;
-Timer oscillationCancellingTimer(&TCC0, 400);
+Timer oscillationCancellingTimer(&TCC0, 600);
 Timer heartbeat(&TCD0, 500);
 uint16_t hearbeatCounter = 0;
 
@@ -35,7 +35,7 @@ AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
-VolumeControl volumeControl;
+VolumeControl volumeControl(33, 60);
 
 // monitors
 PowerSupplyMonitor powerSupplyMonitor;
@@ -46,28 +46,28 @@ uint8_t analogIndicatorMode = ANALOG_INDICATOR_MODE_POWER;
 
 bool turnedOn = false;
 
-// Secondary encoder interrupt: right
+// Main encoder interrupt: right
 ISR (TCC1_CCA_vect) {
 	TCC1.CNT = 8;
-	events.setStatus(Events::ENCODER_RIGHT);
-}
-
-// Secondary encoder interrupt: left
-ISR (TCC1_OVF_vect) {
-	TCC1.CNT = 8;
-	events.setStatus(Events::ENCODER_LEFT);
-}
-
-// Main encoder interrupt: right
-ISR (TCD1_CCA_vect) {
-	TCD1.CNT = 8;
-	events.setStatus(Events::ENCODER_RIGHT);
+	events.setStatus(Events::ENCODER_MAIN_RIGHT);
 }
 
 // Main encoder interrupt: left
+ISR (TCC1_OVF_vect) {
+	events.setStatus(Events::ENCODER_MAIN_LEFT);
+	TCC1.CNT = 8;
+}
+
+// Secondary encoder interrupt: right
+ISR (TCD1_CCA_vect) {
+	TCD1.CNT = 8;
+	events.setStatus(Events::ENCODER_SECONDARY_RIGHT);
+}
+
+// Secondary encoder interrupt: left
 ISR (TCD1_OVF_vect) {
 	TCD1.CNT = 8;
-	events.setStatus(Events::ENCODER_LEFT);
+	events.setStatus(Events::ENCODER_SECONDARY_LEFT);
 }
 
 /* *****************
@@ -186,18 +186,32 @@ int main(void)
 	{
 		eventsStatus = events.getStatus();
 
-		if (eventsStatus == Events::ENCODER_LEFT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 2);
+		if (eventsStatus == Events::ENCODER_MAIN_LEFT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
 
-			volumeControl.stepDown();
-			analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
+			volumeControl.stepAudioDown();
+			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
 		}
 
-		if (eventsStatus == Events::ENCODER_RIGHT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 2);
+		if (eventsStatus == Events::ENCODER_MAIN_RIGHT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
 
-			volumeControl.stepUp();
-			analogIndicator.setPercentValue(volumeControl.getCurrentVolume());
+			volumeControl.stepAudioUp();
+			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
+		}
+
+		if (eventsStatus == Events::ENCODER_SECONDARY_LEFT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+
+			volumeControl.stepBassDown();
+			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
+		}
+
+		if (eventsStatus == Events::ENCODER_SECONDARY_RIGHT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+
+			volumeControl.stepBassUp();
+			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
 		}
 
 		if (eventsStatus == Events::TIMER_DOWN) {

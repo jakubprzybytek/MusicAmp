@@ -19,13 +19,13 @@ void PGA4311::init() {
 void PGA4311::setVolume(uint8_t firstChanell, uint8_t secondChanell, uint8_t thirdChanell, uint8_t fourthChanell) {
 	csPort->OUTCLR = csPin_bm;
 
-	spi->DATA = firstChanell;
-	while (!(spi->STATUS & SPI_IF_bm)) ;
-	spi->DATA = secondChanell;
+	spi->DATA = fourthChanell;
 	while (!(spi->STATUS & SPI_IF_bm)) ;
 	spi->DATA = thirdChanell;
 	while (!(spi->STATUS & SPI_IF_bm)) ;
-	spi->DATA = fourthChanell;
+	spi->DATA = secondChanell;
+	while (!(spi->STATUS & SPI_IF_bm)) ;
+	spi->DATA = firstChanell;
 	while (!(spi->STATUS & SPI_IF_bm)) ;
 
 	csPort->OUTSET = csPin_bm;

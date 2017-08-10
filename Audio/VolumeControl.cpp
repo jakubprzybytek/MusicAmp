@@ -14,21 +14,36 @@ void VolumeControl::init() {
 	pga4311.init();
 }
 
-void VolumeControl::setVolume(uint8_t newAudioVolume) {
+void VolumeControl::setVolume(uint8_t newAudioVolume, uint8_t newBassVolume) {
 	audioVolume = newAudioVolume;
-	pga4311.setVolume(audioVolume * 2.5, audioVolume * 2.5, audioVolume * 2.5, audioVolume * 2.5);
+	bassVolume = newBassVolume;
+	uint8_t audioRaw = audioVolume * 2.5;
+	uint8_t bassRaw = audioRaw * newBassVolume / 100.0;
+	pga4311.setVolume(audioRaw, bassRaw, audioRaw, bassRaw);
 }
 
-void VolumeControl::stepUp() {
-	setVolume(audioVolume <= (100 - VOL_STEEP) ? audioVolume + VOL_STEEP : 100);
+void VolumeControl::stepAudioUp() {
+	setVolume(audioVolume <= (100 - VOL_STEEP) ? audioVolume + VOL_STEEP : 100, bassVolume);
 }
 
-void VolumeControl::stepDown() {
-	setVolume(audioVolume >= VOL_STEEP ? audioVolume - VOL_STEEP : 0);
+void VolumeControl::stepAudioDown() {
+	setVolume(audioVolume >= VOL_STEEP ? audioVolume - VOL_STEEP : 0, bassVolume);
 }
 
-uint8_t VolumeControl::getCurrentVolume() {
+void VolumeControl::stepBassUp() {
+	setVolume(audioVolume, bassVolume <= (100 - VOL_STEEP) ? bassVolume + VOL_STEEP : 100);
+}
+
+void VolumeControl::stepBassDown() {
+	setVolume(audioVolume, bassVolume >= VOL_STEEP ? bassVolume - VOL_STEEP : 0);
+}
+
+uint8_t VolumeControl::getCurrentAudioVolume() {
 	return audioVolume;
+}
+
+uint8_t VolumeControl::getCurrentBassVolume() {
+	return bassVolume;
 }
 
 void VolumeControl::mute() {
@@ -37,8 +52,5 @@ void VolumeControl::mute() {
 
 void VolumeControl::unmute() {
 	PORTE.OUTSET = PIN0_bm | PIN1_bm;
-}
-
-void VolumeControl::muteTgl() {
-	PORTE.OUTTGL = PIN0_bm | PIN1_bm;
+	setVolume(audioVolume, bassVolume);
 }
