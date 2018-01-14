@@ -8,9 +8,7 @@
 #include "VolumeControl.hpp"
 
 void VolumeControl::init() {
-	
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
-
 	pga4311.init();
 }
 
