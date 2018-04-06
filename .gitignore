@@ -22,3 +22,8 @@ _autosave-*
 # Exported BOM files
 *.xml
 *.csv
+
+# KiCad files
+*-bak
+*.bak
+_autosave*

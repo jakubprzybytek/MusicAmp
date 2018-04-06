@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name sparkfun)(type KiCad)(uri C:\_ME\Rodos\kicad-lib\footprints\sparkfun.pretty)(options "")(descr ""))
+)
