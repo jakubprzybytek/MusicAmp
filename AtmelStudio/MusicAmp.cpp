@@ -37,7 +37,7 @@ PowerControl powerControl;
 InputSelector inputSelector;
 VolumeControl volumeControl(33, 60);
 
-// monitors
+// sensors
 PowerSupplyMonitor powerSupplyMonitor;
 
 #define ANALOG_INDICATOR_MODE_POWER 0x00
@@ -105,7 +105,8 @@ ISR (TCD0_OVF_vect) {
 ISR (PORTA_INT0_vect) {
 	processSwitchInterrupt();
 
-	debug.toggleLed();
+	//debug.toggleLed();
+	debug.blink(2);
 	//inputSelector.nextInput();
 	//volumeControl.muteTgl();
 	
@@ -134,17 +135,17 @@ ISR (PORTC_INT0_vect) {
 
 void processSwitchInterrupt() {
 	debug.switcher.disableInterrupt();
-	powerControl.switcher.disableInterrupt();
+	powerControl.mainPowerSwitch.disableInterrupt();
 
 	oscillationCancellingTimer.enable();
 }
 
 void processTimerInterrupt() {
-	if (debug.switcher.isUp() && powerControl.switcher.isUp()) {
+	if (debug.switcher.isUp() && powerControl.mainPowerSwitch.isUp()) {
 		oscillationCancellingTimer.disable();
 
 		debug.switcher.enableInterrupt();
-		powerControl.switcher.enableInterrupt();
+		powerControl.mainPowerSwitch.enableInterrupt();
 	}
 }
 
@@ -232,13 +233,15 @@ void turnOn() {
 	_delay_ms(100);
 	volumeControl.unmute();
 
-	debug.blink(1);
+	debug.blink(3);
 }
 
 void turnOff() {
 	volumeControl.mute();
-	powerControl.disableLight();
+	_delay_ms(100);
 	powerControl.disablePower();
+	_delay_ms(100);
+	powerControl.disableLight();
 
 	debug.blink(2);
 }

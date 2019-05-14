@@ -27,3 +27,5 @@ _autosave-*
 *-bak
 *.bak
 _autosave*
+
+rescue-backup

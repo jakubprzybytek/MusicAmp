@@ -16,7 +16,7 @@ void PowerControl::init() {
 	PORTA.DIRSET = TRIGGER_PIN;
 	PORTC.DIRSET = LED_PIN;
 
-	switcher.init();
+	mainPowerSwitch.init();
 }
 
 void PowerControl::enablePower() {

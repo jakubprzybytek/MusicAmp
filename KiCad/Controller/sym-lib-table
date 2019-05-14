@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name Controller-rescue)(type Legacy)(uri ${KIPRJMOD}/Controller-rescue.lib)(options "")(descr ""))
+  (lib (name myLib)(type Legacy)(uri D:/Workspace/KiCad-JPLibs/components/myLib.lib)(options "")(descr ""))
+  (lib (name KICAD-OPEN-LIBS)(type Legacy)(uri D:/Workspace/kicad-open-libs/KICAD-OPEN-LIBS.lib)(options "")(descr ""))
+  (lib (name sparkfun)(type Legacy)(uri D:/Workspace/kicad-lib/components/sparkfun.lib)(options "")(descr ""))
+)

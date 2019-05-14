@@ -18,7 +18,7 @@ void AnalogIndicator::init() {
 	dac->CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm;
 	
 	while ( (dac->STATUS & DAC_CH0DRE_bm) == false );
-	dac->CH0DATA = 2000;
+	dac->CH0DATA = 0;
 }
 
 void AnalogIndicator::setPercentValue(uint8_t value) {

@@ -13,9 +13,9 @@
 class PowerControl {
 
 public:
-	InterruptSwitch switcher;
+	InterruptSwitch mainPowerSwitch;
 
-	PowerControl() : switcher(&PORTC, PIN2_bm, &(PORTC.PIN2CTRL)) {}
+	PowerControl() : mainPowerSwitch(&PORTC, PIN2_bm, &(PORTC.PIN2CTRL)) {}
 
 	void init();
 

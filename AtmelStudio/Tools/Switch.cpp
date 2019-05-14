@@ -11,7 +11,7 @@
 void InterruptSwitch::init() {
 
 	port->DIRCLR = pin;
-	*(portCtrl) = PORT_OPC_PULLUP_gc | PORT_ISC_FALLING_gc;
+	*(portCtrl) = PORT_OPC_PULLUP_gc | PORT_ISC_LEVEL_gc;
 	port->INT0MASK = pin;
 
 	enableInterrupt();
