@@ -14,13 +14,16 @@
 #include "Tools/Timer.hpp"
 
 #include "IO/Debug.hpp"
-#include "IO/PowerControl.hpp"
 #include "IO/Encoder.hpp"
+#include "IO/PowerControl.hpp"
 #include "IO/InputSelector.hpp"
+#include "IO/TapeLoopControl.h"
 #include "IO/AnalogIndicator.hpp"
 
 #include "Audio/VolumeControl.hpp"
 #include "Monitor/PowerSupplyMonitor.hpp"
+
+#define ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME 2
 
 Debug debug;
 Timer oscillationCancellingTimer(&TCC0, 600);
@@ -35,39 +38,50 @@ AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
+TapeLoopControl tapeLoopControl;
 VolumeControl volumeControl(33, 60);
 
 // sensors
 PowerSupplyMonitor powerSupplyMonitor;
 
-#define ANALOG_INDICATOR_MODE_POWER 0x00
-#define ANALOG_INDICATOR_MODE_OFF 0x01
+enum AnalogIndicatorMode {
+	ANALOG_INDICATOR_MODE_POWER,
+	ANALOG_INDICATOR_MODE_OFF
+};
 uint8_t analogIndicatorMode = ANALOG_INDICATOR_MODE_POWER;
 
 bool turnedOn = false;
 
-// Main encoder interrupt: right
+/* *****************
+ * Main encoder interrupt: right
+ ***************** */
 ISR (TCC1_CCA_vect) {
 	TCC1.CNT = 8;
-	events.setStatus(Events::ENCODER_MAIN_RIGHT);
+	events.submit(ENCODER_MAIN_RIGHT);
 }
 
-// Main encoder interrupt: left
+/* *****************
+ * Main encoder interrupt: left
+ ***************** */
 ISR (TCC1_OVF_vect) {
-	events.setStatus(Events::ENCODER_MAIN_LEFT);
+	events.submit(ENCODER_MAIN_LEFT);
 	TCC1.CNT = 8;
 }
 
-// Secondary encoder interrupt: right
+/* *****************
+ * Secondary encoder interrupt: right
+ ***************** */
 ISR (TCD1_CCA_vect) {
 	TCD1.CNT = 8;
-	events.setStatus(Events::ENCODER_SECONDARY_RIGHT);
+	events.submit(ENCODER_SECONDARY_RIGHT);
 }
 
-// Secondary encoder interrupt: left
+/* *****************
+ * Secondary encoder interrupt: left
+ ***************** */
 ISR (TCD1_OVF_vect) {
 	TCD1.CNT = 8;
-	events.setStatus(Events::ENCODER_SECONDARY_LEFT);
+	events.submit(ENCODER_SECONDARY_LEFT);
 }
 
 /* *****************
@@ -84,7 +98,7 @@ ISR (TCD0_OVF_vect) {
 	if (hearbeatCounter > 0) {
 		hearbeatCounter--;
 		if (hearbeatCounter == 0) {
-			events.setStatus(Events::TIMER_DOWN);
+			events.submit(TIMER_DOWN);
 		}
 	}
 
@@ -92,6 +106,7 @@ ISR (TCD0_OVF_vect) {
 		case ANALOG_INDICATOR_MODE_POWER:
 			static float power;
 			if (!powerSupplyMonitor.readPowerValue(&power)) {
+				analogIndicator.setPercentValue((uint8_t)0); // delete me
 				return;
 			}
 			analogIndicator.setPercentValue(power);
@@ -133,19 +148,38 @@ ISR (PORTC_INT0_vect) {
 	turnedOn = !turnedOn;
 }
 
+/* *****************
+ * Port D: Input Selector Switch and Tape Loop Switch 0 int
+ ***************** */
+ISR (PORTD_INT0_vect) {
+	processSwitchInterrupt();
+
+	if (!tapeLoopControl.switcher.isUp()) {
+		tapeLoopControl.led.turnOn();
+	} else {
+		tapeLoopControl.led.turnOff();
+	}
+
+	if (!inputSelector.button.isUp()) {
+		//
+	}
+}
+
 void processSwitchInterrupt() {
 	debug.switcher.disableInterrupt();
 	powerControl.mainPowerSwitch.disableInterrupt();
+	inputSelector.button.disableInterrupt();
 
 	oscillationCancellingTimer.enable();
 }
 
 void processTimerInterrupt() {
-	if (debug.switcher.isUp() && powerControl.mainPowerSwitch.isUp()) {
+	if (debug.switcher.isUp() && powerControl.mainPowerSwitch.isUp() && inputSelector.button.isUp()) {
 		oscillationCancellingTimer.disable();
 
 		debug.switcher.enableInterrupt();
 		powerControl.mainPowerSwitch.enableInterrupt();
+		inputSelector.button.enableInterrupt();
 	}
 }
 
@@ -161,20 +195,23 @@ int main(void)
 	oscillationCancellingTimer.init();
 	heartbeat.init();
 
-	// IO
-	powerControl.init();
+	// Basic inputs
 	mainEncoder.InitMain();
 	secondaryEncoder.InitSecondary();
 
-	// outputs
+	// Basic outputs
 	analogIndicator.init();
 
 	// controllers
-	inputSelector.init();
 	volumeControl.init();
 
 	// monitors
 	powerSupplyMonitor.init();
+
+	// integrated controllers
+	powerControl.init();
+	inputSelector.init();
+	tapeLoopControl.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -182,40 +219,38 @@ int main(void)
 
 	heartbeat.enable();
 
-	uint8_t eventsStatus;
-	while(1)
-	{
-		eventsStatus = events.getStatus();
+	while(1) {
+		Event event = events.get();
 
-		if (eventsStatus == Events::ENCODER_MAIN_LEFT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+		if (event == ENCODER_MAIN_LEFT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepAudioDown();
 			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
 		}
 
-		if (eventsStatus == Events::ENCODER_MAIN_RIGHT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+		if (event == ENCODER_MAIN_RIGHT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepAudioUp();
 			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
 		}
 
-		if (eventsStatus == Events::ENCODER_SECONDARY_LEFT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+		if (event == ENCODER_SECONDARY_LEFT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepBassDown();
 			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
 		}
 
-		if (eventsStatus == Events::ENCODER_SECONDARY_RIGHT) {
-			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, 3);
+		if (event == ENCODER_SECONDARY_RIGHT) {
+			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepBassUp();
 			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
 		}
 
-		if (eventsStatus == Events::TIMER_DOWN) {
+		if (event == TIMER_DOWN) {
 			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_POWER);
 		}
 	}

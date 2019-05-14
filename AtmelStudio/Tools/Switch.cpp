@@ -8,11 +8,11 @@
 
 #include "Switch.hpp"
 
-void InterruptSwitch::init() {
+void InterruptSwitch::init(uint8_t pinCtrlValue) {
 
 	port->DIRCLR = pin;
-	*(portCtrl) = PORT_OPC_PULLUP_gc | PORT_ISC_LEVEL_gc;
-	port->INT0MASK = pin;
+	*(pinCtrl) = pinCtrlValue;
+	port->INT0MASK |= pin;
 
 	enableInterrupt();
 }

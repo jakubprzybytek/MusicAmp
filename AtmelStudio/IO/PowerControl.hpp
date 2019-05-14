@@ -6,16 +6,22 @@
  */ 
 
 #include "../Tools/Switch.hpp"
+#include "../Tools/LedPin.hpp"
 
 #ifndef POWER_CONTROL_H_
 #define POWER_CONTROL_H_
 
 class PowerControl {
 
+private:
+	LedPin powerLed;
+
 public:
 	InterruptSwitch mainPowerSwitch;
 
-	PowerControl() : mainPowerSwitch(&PORTC, PIN2_bm, &(PORTC.PIN2CTRL)) {}
+	PowerControl() : 
+		powerLed(&PORTC, PIN3_bm),
+		mainPowerSwitch(&PORTC, PIN2_bm, &(PORTC.PIN2CTRL)) {}
 
 	void init();
 

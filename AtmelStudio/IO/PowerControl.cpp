@@ -8,14 +8,12 @@
 
 #include "PowerControl.hpp"
 
-#define SWITCH_PIN PIN2_bm
-#define LED_PIN PIN3_bm
 #define TRIGGER_PIN PIN5_bm
 
 void PowerControl::init() {
 	PORTA.DIRSET = TRIGGER_PIN;
-	PORTC.DIRSET = LED_PIN;
 
+	powerLed.init();
 	mainPowerSwitch.init();
 }
 
@@ -28,9 +26,9 @@ void PowerControl::disablePower() {
 }
 
 void PowerControl::enableLight() {
-	PORTC.OUTSET = LED_PIN;
+	powerLed.turnOn();
 }
 
 void PowerControl::disableLight() {
-	PORTC.OUTCLR = LED_PIN;
+	powerLed.turnOff();
 }

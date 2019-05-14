@@ -9,6 +9,8 @@
 #include "InputSelector.hpp"
 
 void InputSelector::init() {
+	button.init();
+
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm;
 	PORTF.OUTSET = currentInput;
 }

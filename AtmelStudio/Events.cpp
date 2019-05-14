@@ -10,18 +10,28 @@
 
 #include "Events.hpp"
 
-void Events::setStatus(uint8_t newAction) {
-	inputsStatus = newAction;
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
+void Events::submit(Event event) {
+	if (this->eventsListIndex == MAX_EVENTS) {
+		return;
+	}
+
+	this->eventsList[this->eventsListIndex++] = event;
+	this->maxEventsListIndex = MAX(this->maxEventsListIndex, this->eventsListIndex);
 }
 
-uint8_t Events::getStatus() {
-	while (inputsStatus == Events::NO_ACTION) {
+Event Events::get() {
+	while (this->eventsListIndex == 0) {
 		SLEEP.CTRL = SLEEP_SMODE_IDLE_gc | SLEEP_SEN_bm;
 		sleep_cpu();
 		SLEEP.CTRL = SLEEP_SMODE_IDLE_gc;
 	}
 
-	uint8_t statusToReturn = inputsStatus;
-	inputsStatus = Events::NO_ACTION;
-	return statusToReturn;
+	Event toReturn = this->eventsList[0];
+	for (uint8_t j = 1; j < this->eventsListIndex; j++) {
+		this->eventsList[j - 1] = this->eventsList[j];
+	}
+	this->eventsListIndex--;
+	return toReturn;
 }

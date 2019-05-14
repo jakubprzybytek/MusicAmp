@@ -14,12 +14,12 @@ class InterruptSwitch {
 private:
 	PORT_t* port;
 	uint8_t pin;
-	register8_t* portCtrl;
+	register8_t* pinCtrl;
 
 public:
-	InterruptSwitch (PORT_t* port, uint8_t pin, register8_t* portCtrl) : port(port), pin(pin), portCtrl(portCtrl) {}
+	InterruptSwitch (PORT_t* port, uint8_t pin, register8_t* pinCtrl) : port(port), pin(pin), pinCtrl(pinCtrl) {}
 
-	void init();
+	void init(uint8_t pinCtrlValue = PORT_OPC_PULLUP_gc | PORT_ISC_LEVEL_gc);
 
 	void enableInterrupt();
 	void disableInterrupt();
