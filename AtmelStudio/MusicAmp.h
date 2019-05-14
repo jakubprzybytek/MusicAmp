@@ -17,4 +17,7 @@ void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay = 0);
 void turnOn();
 void turnOff();
 
+void enableTapeLoop();
+void disableTapeLoop();
+
 #endif /* MUSICAMP_H_ */

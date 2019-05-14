@@ -32,6 +32,10 @@ uint16_t hearbeatCounter = 0;
 
 Events events;
 
+// inputs
+Encoder mainEncoder(&TCC1, 0);
+Encoder secondaryEncoder(&TCD1, 2);
+
 // outputs
 AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 
@@ -155,13 +159,13 @@ ISR (PORTD_INT0_vect) {
 	processSwitchInterrupt();
 
 	if (!tapeLoopControl.switcher.isUp()) {
-		tapeLoopControl.led.turnOn();
+		enableTapeLoop();
 	} else {
-		tapeLoopControl.led.turnOff();
+		disableTapeLoop();
 	}
 
 	if (!inputSelector.button.isUp()) {
-		//
+		debug.blink(2);
 	}
 }
 
@@ -185,10 +189,6 @@ void processTimerInterrupt() {
 
 int main(void)
 {
-	// inputs
-	Encoder mainEncoder(&TCC1);
-	Encoder secondaryEncoder(&TCD1);
-
 	debug.init();
 
 	// core features
@@ -196,8 +196,8 @@ int main(void)
 	heartbeat.init();
 
 	// Basic inputs
-	mainEncoder.InitMain();
-	secondaryEncoder.InitSecondary();
+	mainEncoder.initMain();
+	secondaryEncoder.initSecondary();
 
 	// Basic outputs
 	analogIndicator.init();
@@ -263,9 +263,18 @@ void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay) {
 
 void turnOn() {
 	powerControl.enableLight();
+	mainEncoder.enable();
+	secondaryEncoder.enable();
+
 	_delay_ms(100);
 	powerControl.enablePower();
+
 	_delay_ms(100);
+	if (!tapeLoopControl.switcher.isUp()) {
+		enableTapeLoop();
+	}
+	
+	_delay_ms(50);
 	volumeControl.unmute();
 
 	debug.blink(3);
@@ -273,10 +282,23 @@ void turnOn() {
 
 void turnOff() {
 	volumeControl.mute();
+	disableTapeLoop();
+	mainEncoder.disable();
+	secondaryEncoder.disable();
+
 	_delay_ms(100);
 	powerControl.disablePower();
+
 	_delay_ms(100);
 	powerControl.disableLight();
 
 	debug.blink(2);
+}
+
+void enableTapeLoop() {
+	tapeLoopControl.led.turnOn();
+}
+
+void disableTapeLoop() {
+	tapeLoopControl.led.turnOff();
 }

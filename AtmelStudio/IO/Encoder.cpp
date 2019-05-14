@@ -8,7 +8,7 @@
 
 #include "Encoder.hpp"
 
-void Encoder::InitMain() {
+void Encoder::initMain() {
 	// set up port pins
 	PORTD.DIRCLR = PIN2_bm | PIN3_bm;
 	PORTD.PIN2CTRL = PORT_ISC_LEVEL_gc | PORT_OPC_PULLUP_gc;
@@ -18,12 +18,11 @@ void Encoder::InitMain() {
 	EVSYS.CH0MUX = EVSYS_CHMUX_PORTD_PIN2_gc;
 	EVSYS.CH0CTRL = EVSYS_QDEN_bm |	EVSYS_DIGFILT_8SAMPLES_gc;
 
-	tc->CTRLA = TC_CLKSEL_EVCH0_gc;
+	initTimer();
 	tc->CTRLD = TC_EVACT_QDEC_gc | TC_EVSEL_CH0_gc;
-	InitTimer();
 }
 
-void Encoder::InitSecondary() {
+void Encoder::initSecondary() {
 	// set up port pins
 	PORTB.DIRCLR = PIN4_bm | PIN5_bm;
 	PORTB.PIN4CTRL = PORT_ISC_LEVEL_gc | PORT_OPC_PULLUP_gc;
@@ -32,12 +31,12 @@ void Encoder::InitSecondary() {
 	EVSYS.CH2MUX = EVSYS_CHMUX_PORTB_PIN4_gc;
 	EVSYS.CH2CTRL = EVSYS_QDEN_bm |	EVSYS_DIGFILT_8SAMPLES_gc;
 
-	tc->CTRLA = TC_CLKSEL_EVCH2_gc;
+	initTimer();
 	tc->CTRLD = TC_EVACT_QDEC_gc | TC_EVSEL_CH2_gc;
-	InitTimer();
+	//tc->CTRLA = TC_CLKSEL_EVCH2_gc;
 }
 
-void Encoder::InitTimer() {
+void Encoder::initTimer() {
 	// set up counter
 	tc->INTCTRLA = TC_OVFINTLVL_LO_gc;
 	tc->INTCTRLB = TC_CCAINTLVL_LO_gc;
@@ -45,3 +44,12 @@ void Encoder::InitTimer() {
 	tc->CNT = 8;
 	tc->PER = 11;
 }
+
+void Encoder::enable() {
+	tc->CTRLA = TC_CLKSEL_EVCH0_gc + this->eventNumber;
+}
+
+void Encoder::disable() {
+	tc->CTRLA = TC_CLKSEL_OFF_gc;
+}
+

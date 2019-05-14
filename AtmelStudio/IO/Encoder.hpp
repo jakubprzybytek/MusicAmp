@@ -12,15 +12,20 @@ class Encoder {
 
 private:
 	TC1_t * tc;
+	uint8_t eventNumber;
 
 public:
-	Encoder(TC1_t * tc) : tc(tc) {};
+	Encoder(TC1_t * tc, uint8_t eventNumber) : tc(tc), eventNumber(eventNumber) {};
 
-	void InitMain();
-	void InitSecondary();
+	void initMain();
+	void initSecondary();
 
 private:
-	void InitTimer();
+	void initTimer();
+
+public:
+	void enable();
+	void disable();
 
 };
 
