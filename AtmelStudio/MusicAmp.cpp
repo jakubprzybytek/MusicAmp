@@ -125,16 +125,9 @@ ISR (PORTA_INT0_vect) {
 	processSwitchInterrupt();
 
 	//debug.toggleLed();
-	debug.blink(2);
-	//inputSelector.nextInput();
+	debug.blink(1);
+	inputSelector.nextInput();
 	//volumeControl.muteTgl();
-	
-	static float power;
-	if (!powerSupplyMonitor.readPowerValue(&power)) {
-		return;
-	}
-
-	analogIndicator.setPercentValue(power);
 }
 
 /* *****************
@@ -277,7 +270,7 @@ void turnOn() {
 	_delay_ms(50);
 	volumeControl.unmute();
 
-	debug.blink(3);
+	debug.blink(1);
 }
 
 void turnOff() {
