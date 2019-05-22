@@ -1,5 +1,3 @@
 (sym_lib_table
   (lib (name MainSwitch-rescue)(type Legacy)(uri ${KIPRJMOD}/MainSwitch-rescue.lib)(options "")(descr ""))
-  (lib (name relay)(type Legacy)(uri D:/Workspace/kicad-oshec/library/relay.lib)(options "")(descr ""))
-  (lib (name myLib)(type Legacy)(uri D:/Workspace/KiCad-JPLibs/components/myLib.lib)(options "")(descr ""))
 )
