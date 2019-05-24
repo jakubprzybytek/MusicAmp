@@ -3620,7 +3620,7 @@ F 1 "CONN_01X02" V 9450 3450 50  0000 C CNN
 F 2 "Connectors:PINHEAD1-2" H 9350 3450 50  0001 C CNN
 F 3 "" H 9350 3450 50  0001 C CNN
 	1    9350 3450
-	1    0    0    1   
+	1    0    0    -1  
 $EndComp
 $Comp
 L PreAmp-rescue:CONN_01X02 J3
@@ -3631,7 +3631,7 @@ F 1 "CONN_01X02" V 9450 4500 50  0000 C CNN
 F 2 "Connectors:PINHEAD1-2" H 9350 4500 50  0001 C CNN
 F 3 "" H 9350 4500 50  0001 C CNN
 	1    9350 4500
-	1    0    0    1   
+	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	9050 4650 9050 4550
