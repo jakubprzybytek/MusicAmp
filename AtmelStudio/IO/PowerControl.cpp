@@ -15,6 +15,7 @@ void PowerControl::init() {
 
 	powerLed.init();
 	mainPowerSwitch.init();
+	mainPowerSwitch.enableInterrupt();
 }
 
 void PowerControl::enablePower() {

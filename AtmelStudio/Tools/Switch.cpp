@@ -9,12 +9,9 @@
 #include "Switch.hpp"
 
 void InterruptSwitch::init(uint8_t pinCtrlValue) {
-
 	port->DIRCLR = pin;
 	*(pinCtrl) = pinCtrlValue;
 	port->INT0MASK |= pin;
-
-	enableInterrupt();
 }
 
 void InterruptSwitch::enableInterrupt() {

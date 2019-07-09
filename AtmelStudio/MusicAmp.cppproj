@@ -226,12 +226,6 @@
     <Compile Include="IO\InputSelector.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="IO\TapeLoopControl.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="IO\TapeLoopControl.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="LUFA\Common\Architectures.h">
       <SubType>compile</SubType>
     </Compile>

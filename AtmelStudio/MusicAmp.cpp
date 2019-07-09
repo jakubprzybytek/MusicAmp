@@ -17,7 +17,6 @@
 #include "IO/Encoder.hpp"
 #include "IO/PowerControl.hpp"
 #include "IO/InputSelector.hpp"
-#include "IO/TapeLoopControl.h"
 #include "IO/AnalogIndicator.hpp"
 
 #include "Audio/VolumeControl.hpp"
@@ -26,7 +25,7 @@
 #define ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME 2
 
 Debug debug;
-Timer oscillationCancellingTimer(&TCC0, 600);
+Timer oscillationCancellingTimer(&TCC0, 400);
 Timer heartbeat(&TCD0, 500);
 uint16_t hearbeatCounter = 0;
 
@@ -42,7 +41,6 @@ AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
-TapeLoopControl tapeLoopControl;
 VolumeControl volumeControl(33, 60);
 
 // sensors
@@ -151,32 +149,27 @@ ISR (PORTC_INT0_vect) {
 ISR (PORTD_INT0_vect) {
 	processSwitchInterrupt();
 
-	if (!tapeLoopControl.switcher.isUp()) {
-		enableTapeLoop();
-	} else {
-		disableTapeLoop();
-	}
-
-	if (!inputSelector.button.isUp()) {
-		debug.blink(2);
-	}
+	events.submit(INPUT_SELECTOR_TRIGGERED);
 }
 
 void processSwitchInterrupt() {
 	debug.switcher.disableInterrupt();
 	powerControl.mainPowerSwitch.disableInterrupt();
-	inputSelector.button.disableInterrupt();
+	inputSelector.selectionButton.disableInterrupt();
 
 	oscillationCancellingTimer.enable();
 }
 
 void processTimerInterrupt() {
-	if (debug.switcher.isUp() && powerControl.mainPowerSwitch.isUp() && inputSelector.button.isUp()) {
+	if (debug.switcher.isUp() && powerControl.mainPowerSwitch.isUp() && inputSelector.selectionButton.isUp()) {
 		oscillationCancellingTimer.disable();
 
 		debug.switcher.enableInterrupt();
 		powerControl.mainPowerSwitch.enableInterrupt();
-		inputSelector.button.enableInterrupt();
+		
+		if (turnedOn) {
+			inputSelector.selectionButton.enableInterrupt();
+		}
 	}
 }
 
@@ -204,7 +197,6 @@ int main(void)
 	// integrated controllers
 	powerControl.init();
 	inputSelector.init();
-	tapeLoopControl.init();
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -220,31 +212,48 @@ int main(void)
 
 			volumeControl.stepAudioDown();
 			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
-		}
+		} else
 
 		if (event == ENCODER_MAIN_RIGHT) {
 			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepAudioUp();
 			analogIndicator.setPercentValue(volumeControl.getCurrentAudioVolume());
-		}
+		} else
 
 		if (event == ENCODER_SECONDARY_LEFT) {
 			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepBassDown();
 			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
-		}
+		} else
 
 		if (event == ENCODER_SECONDARY_RIGHT) {
 			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
 
 			volumeControl.stepBassUp();
 			analogIndicator.setPercentValue(volumeControl.getCurrentBassVolume());
-		}
+		} else
 
 		if (event == TIMER_DOWN) {
 			setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_POWER);
+		} else
+		
+		if (event == INPUT_SELECTOR_TRIGGERED) {
+
+			if (!inputSelector.tapeLoopSwitch.isUp()) {
+				if (!inputSelector.isTapeLoopEnabled()) {
+					enableTapeLoop();
+				}
+			} else {
+				if (inputSelector.isTapeLoopEnabled()) {
+					disableTapeLoop();
+				}
+			}
+
+			if (!inputSelector.selectionButton.isUp()) {
+				inputSelector.nextInput();
+			}
 		}
 	}
 }
@@ -255,15 +264,17 @@ void setAnalogIndicatorMode(uint8_t newMode, uint8_t delay) {
 }
 
 void turnOn() {
-	powerControl.enableLight();
 	mainEncoder.enable();
 	secondaryEncoder.enable();
 
-	_delay_ms(100);
-	powerControl.enablePower();
+	powerControl.enableLight();
 
-	_delay_ms(100);
-	if (!tapeLoopControl.switcher.isUp()) {
+	_delay_ms(50);
+	//powerControl.enablePower();
+
+	_delay_ms(50);
+	inputSelector.enable();
+	if (!inputSelector.tapeLoopSwitch.isUp()) {
 		enableTapeLoop();
 	}
 	
@@ -274,24 +285,28 @@ void turnOn() {
 }
 
 void turnOff() {
-	volumeControl.mute();
-	disableTapeLoop();
 	mainEncoder.disable();
 	secondaryEncoder.disable();
 
-	_delay_ms(100);
-	powerControl.disablePower();
+	volumeControl.mute();
+	disableTapeLoop();
+	inputSelector.disable();
 
-	_delay_ms(100);
+	_delay_ms(50);
+	//powerControl.disablePower();
+
+	_delay_ms(50);
 	powerControl.disableLight();
 
 	debug.blink(2);
 }
 
 void enableTapeLoop() {
-	tapeLoopControl.led.turnOn();
+	inputSelector.enableTapeLoop();
+	inputSelector.tapeLoopLed.turnOn();
 }
 
 void disableTapeLoop() {
-	tapeLoopControl.led.turnOff();
+	inputSelector.disableTapeLoop();
+	inputSelector.tapeLoopLed.turnOff();
 }
