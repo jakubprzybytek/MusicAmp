@@ -242,17 +242,20 @@ int main(void)
 		if (event == INPUT_SELECTOR_TRIGGERED) {
 
 			if (!inputSelector.tapeLoopSwitch.isUp()) {
-				if (!inputSelector.isTapeLoopEnabled()) {
+				if (!inputSelector.tapeLoopEnabled) {
 					enableTapeLoop();
 				}
 			} else {
-				if (inputSelector.isTapeLoopEnabled()) {
+				if (inputSelector.tapeLoopEnabled) {
 					disableTapeLoop();
 				}
 			}
 
 			if (!inputSelector.selectionButton.isUp()) {
+				setAnalogIndicatorMode(ANALOG_INDICATOR_MODE_OFF, ALTERNATIVE_ANALOG_INDICATOR_MODE_TIME);
+				
 				inputSelector.nextInput();
+				analogIndicator.setPercentValue(uint8_t((inputSelector.currentInput - 1) * 50));
 			}
 		}
 	}
@@ -270,7 +273,7 @@ void turnOn() {
 	powerControl.enableLight();
 
 	_delay_ms(50);
-	//powerControl.enablePower();
+	powerControl.enablePower();
 
 	_delay_ms(50);
 	inputSelector.enable();
@@ -293,7 +296,7 @@ void turnOff() {
 	inputSelector.disable();
 
 	_delay_ms(50);
-	//powerControl.disablePower();
+	powerControl.disablePower();
 
 	_delay_ms(50);
 	powerControl.disableLight();

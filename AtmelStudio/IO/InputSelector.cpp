@@ -11,6 +11,8 @@
 #define TAPE_LOOP_OUTPUT_PIN PIN3_bm
 #define TAPE_LOOP_INPUT_PIN PIN4_bm
 
+#define TO_PIN(x) (x == 1 ? PIN0_bm : (x == 2 ? PIN1_bm : PIN2_bm))
+
 void InputSelector::init() {
 	selectionButton.init();
 	tapeLoopSwitch.init(PORT_OPC_PULLUP_gc | PORT_ISC_BOTHEDGES_gc);
@@ -22,7 +24,7 @@ void InputSelector::init() {
 void InputSelector::enable() {
 	selectionButton.enableInterrupt();
 	tapeLoopSwitch.enableInterrupt();
-	PORTF.OUTSET = currentInput;
+	PORTF.OUTSET = TO_PIN(currentInput);
 }
 
 void InputSelector::disable() {
@@ -32,9 +34,9 @@ void InputSelector::disable() {
 }
 
 void InputSelector::nextInput() {
-	PORTF.OUTCLR = currentInput;
-	currentInput = currentInput == PIN2_bm ? PIN0_bm : (currentInput << 1);
-	PORTF.OUTSET = currentInput;
+	PORTF.OUTCLR = TO_PIN(currentInput);
+	currentInput = currentInput % 3 + 1;
+	PORTF.OUTSET = TO_PIN(currentInput);
 }
 
 void InputSelector::enableTapeLoop() {
