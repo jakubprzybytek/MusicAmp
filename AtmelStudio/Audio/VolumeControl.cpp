@@ -10,12 +10,13 @@
 #define VOL_STEEP 5
 #define VOL_MAX 100
 
-#define SUB_RAW_MIN (192 - 40)
+#define SUB_RAW_MIN (192 - 50)
 #define SUB_RAW_MAX (192 - 0)
 
-void VolumeControl::init() {
+void VolumeControl::init(uint8_t newAudioVolume, uint8_t newBassVolume) {
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	pga4311.init();
+	setVolume(newAudioVolume, newBassVolume);
 }
 
 void VolumeControl::setVolume(uint8_t newAudioVolume, uint8_t newBassVolume) {

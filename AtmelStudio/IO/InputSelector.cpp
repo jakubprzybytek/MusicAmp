@@ -13,12 +13,14 @@
 
 #define TO_PIN(x) (x == 1 ? PIN0_bm : (x == 2 ? PIN1_bm : PIN2_bm))
 
-void InputSelector::init() {
+void InputSelector::init(uint8_t newInputNumber) {
 	selectionButton.init();
 	tapeLoopSwitch.init(PORT_OPC_PULLUP_gc | PORT_ISC_BOTHEDGES_gc);
 	tapeLoopLed.init();
 
 	PORTF.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm | TAPE_LOOP_OUTPUT_PIN | TAPE_LOOP_INPUT_PIN;
+	
+	currentInput = newInputNumber;
 }
 
 void InputSelector::enable() {

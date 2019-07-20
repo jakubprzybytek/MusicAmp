@@ -19,19 +19,19 @@ private:
 	PGA4311 pga4311;
 
 	uint8_t audioVolume; // in percentage
-	uint8_t bassVolume; // in percentage of audioVolume
+	uint8_t bassVolume; // in percentage
 
 public:
-	VolumeControl(uint8_t initialAudioVolume, uint8_t initialBassVolume) : 
+	VolumeControl() : 
 		pga4311(&SPIE, &PORTE, &PORTE, PIN3_bm),
-		audioVolume(initialAudioVolume),
-		bassVolume(initialBassVolume) {}
+		audioVolume(0),
+		bassVolume(0) {}
 
 private:
 	void setVolume(uint8_t newAudioVolume, uint8_t newBassVolume);
 
 public:
-	void init();
+	void init(uint8_t initialAudioVolume, uint8_t initialBassVolume);
 
 	void stepAudioUp();
 	void stepAudioDown();

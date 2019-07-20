@@ -29,7 +29,7 @@ public:
 		currentInput(1),
 		tapeLoopEnabled(false) {}
 
-	void init();
+	void init(uint8_t newInputNumber);
 	void enable();
 	void disable();
 

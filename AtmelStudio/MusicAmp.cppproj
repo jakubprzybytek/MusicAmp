@@ -268,10 +268,22 @@
     <Compile Include="MusicAmp.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Peripheral\eeprom_driver.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Peripheral\eeprom_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Tools\LedPin.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Tools\LedPin.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Tools\SettingsMemory.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Tools\SettingsMemory.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Tools\Timer.cpp">
@@ -297,6 +309,7 @@
     <Folder Include="LUFA\Common" />
     <Folder Include="Monitor" />
     <Folder Include="Devices" />
+    <Folder Include="Peripheral" />
     <Folder Include="Tools" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

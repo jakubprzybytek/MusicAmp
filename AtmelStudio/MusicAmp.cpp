@@ -12,6 +12,7 @@
 #include "Events.hpp"
 
 #include "Tools/Timer.hpp"
+#include "Tools/SettingsMemory.hpp"
 
 #include "IO/Debug.hpp"
 #include "IO/Encoder.hpp"
@@ -26,7 +27,7 @@
 
 Debug debug;
 Timer oscillationCancellingTimer(&TCC0, 400);
-Timer heartbeat(&TCD0, 500);
+Timer heartbeat(&TCD0, 300);
 uint16_t hearbeatCounter = 0;
 
 Events events;
@@ -41,10 +42,13 @@ AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
-VolumeControl volumeControl(33, 40);
+VolumeControl volumeControl;
 
 // sensors
 PowerSupplyMonitor powerSupplyMonitor;
+
+// non-volatile memory storage
+SettingsMemory settingsMemory;
 
 enum AnalogIndicatorMode {
 	ANALOG_INDICATOR_MODE_POWER,
@@ -188,15 +192,18 @@ int main(void)
 	// Basic outputs
 	analogIndicator.init();
 
-	// controllers
-	volumeControl.init();
-
 	// monitors
 	powerSupplyMonitor.init();
 
-	// integrated controllers
+	uint8_t initialAudioVolume = 33;
+	uint8_t initialBassVolume = 40;
+	uint8_t initialInputNumber = 1;
+	settingsMemory.loadData(&initialAudioVolume, &initialBassVolume, &initialInputNumber);
+
+	// controllers
 	powerControl.init();
-	inputSelector.init();
+	inputSelector.init(initialInputNumber);
+	volumeControl.init(initialAudioVolume, initialBassVolume);
 
 	// enable interrupts
 	PMIC.CTRL = PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -300,6 +307,8 @@ void turnOff() {
 
 	_delay_ms(50);
 	powerControl.disableLight();
+
+	settingsMemory.storeData(volumeControl.getCurrentAudioVolume(), volumeControl.getCurrentBassVolume(), inputSelector.currentInput);
 
 	debug.blink(2);
 }
