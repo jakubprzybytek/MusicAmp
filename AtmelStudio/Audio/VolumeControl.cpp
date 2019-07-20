@@ -7,6 +7,12 @@
 
 #include "VolumeControl.hpp"
 
+#define VOL_STEEP 5
+#define VOL_MAX 100
+
+#define SUB_RAW_MIN (192 - 40)
+#define SUB_RAW_MAX (192 - 0)
+
 void VolumeControl::init() {
 	PORTE.DIRSET = PIN0_bm | PIN1_bm;
 	pga4311.init();
@@ -16,7 +22,7 @@ void VolumeControl::setVolume(uint8_t newAudioVolume, uint8_t newBassVolume) {
 	audioVolume = newAudioVolume;
 	bassVolume = newBassVolume;
 	uint8_t audioRaw = audioVolume * 2.5;
-	uint8_t bassRaw = audioRaw * newBassVolume / 100.0;
+	uint8_t bassRaw = SUB_RAW_MIN + (SUB_RAW_MAX - SUB_RAW_MIN) * bassVolume / 100;
 	pga4311.setVolume(audioRaw, bassRaw, audioRaw, bassRaw);
 }
 

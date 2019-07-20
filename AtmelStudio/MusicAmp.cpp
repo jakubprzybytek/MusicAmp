@@ -41,7 +41,7 @@ AnalogIndicator analogIndicator(&DACB, &PORTB, PIN2_bm);
 // controllers
 PowerControl powerControl;
 InputSelector inputSelector;
-VolumeControl volumeControl(33, 60);
+VolumeControl volumeControl(33, 40);
 
 // sensors
 PowerSupplyMonitor powerSupplyMonitor;
